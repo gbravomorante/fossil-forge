@@ -1,0 +1,15 @@
+{
+  "name": "fossil-forge",
+  "private": true,
+  "version": "0.3.0",
+  "description": "Local cortical fossil thickening workbench",
+  "dependencies": {
+    "three": "0.183.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  },
+  "scripts": {
+    "test:ui": "playwright test"
+  }
+}

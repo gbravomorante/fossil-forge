@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Fossil Forge — Cortical backing workbench</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three/build/three.module.js",
+          "three/addons/": "/vendor/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="mark">◈</span>
+        <div><strong>Fossil Forge</strong><span>CORTICAL BACKING WORKBENCH</span></div>
+      </div>
+      <div class="local"><i></i> Local on your computer <span class="version">v0.3</span></div>
+    </header>
+    <main>
+      <aside class="sidebar">
+        <section>
+          <div class="section-label"><span class="step">01</span> SOURCE FRAGMENT</div>
+          <div
+            id="dropzone"
+            class="dropzone"
+            tabindex="0"
+            role="button"
+            aria-label="Open a fossil mesh"
+          >
+            <span class="upload-icon">↥</span><strong>Open a fossil surface</strong
+            ><span>Drop a PLY, STL or OBJ here</span>
+          </div>
+          <input id="file" type="file" accept=".ply,.stl,.obj" hidden />
+          <div class="row unitrow">
+            <label for="units">Source units</label
+            ><select id="units">
+              <option value="mm">Millimetres</option>
+              <option value="cm">Centimetres</option>
+              <option value="m">Metres</option>
+              <option value="in">Inches</option>
+            </select>
+          </div>
+          <button id="example" class="text-button">Load Example.ply <span>↗</span></button>
+          <div id="fileinfo" class="fileinfo" hidden>
+            <strong id="filename"></strong><span id="dimensions"></span><span id="triangles"></span>
+          </div>
+        </section>
+        <section>
+          <div class="section-label"><span class="step">02</span> PRESERVE THE BONE</div>
+          <p class="helper">
+            Rotate the fragment, then click the good cortical side. The core cortex stays fixed;
+            optional cleanup may adjust its cut edge.
+          </p>
+          <button id="pick" class="secondary" disabled>Choose cortical side</button>
+          <div id="side-info" class="side-info">No side selected</div>
+          <button id="reverse" class="text-button" disabled>
+            Reverse growth side <span>⇄</span>
+          </button>
+        </section>
+        <section class="grow-section">
+          <div class="section-label"><span class="step">03</span> ADD A BACKING</div>
+          <div class="segmented">
+            <button id="mirror" class="active" aria-pressed="true">Mirror sandwich</button
+            ><button id="curve" aria-pressed="false">Follow curve</button
+            ><button id="direction" aria-pressed="false">Use arrow</button>
+          </div>
+          <p id="mode-help" class="helper compact">
+            A smaller reflected skin faces outward on the opposite side. Bridge smoothing softens
+            the connecting wall.
+          </p>
+          <div id="mirror-options">
+            <div class="row">
+              <label for="backing-shape">Back surface</label
+              ><select id="backing-shape">
+                <option value="mirror">Mirrored skin</option>
+                <option value="flat">Flat back</option>
+              </select>
+            </div>
+            <div class="row">
+              <label id="copy-size-label" for="copy-percent">Copy size</label>
+              <div class="number-wrap">
+                <input id="copy-percent" type="number" min="1" max="100" step="1" value="90" /><span
+                  >%</span
+                >
+              </div>
+            </div>
+            <p id="copy-size-help" class="helper tiny">
+              90% means 10% smaller in all three dimensions.
+            </p>
+            <div class="row">
+              <label for="bridge-smoothing">Bridge smoothing</label>
+              <div class="number-wrap">
+                <input
+                  id="bridge-smoothing"
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value="1"
+                /><span>mm</span>
+              </div>
+            </div>
+            <p class="helper tiny">
+              Softens the bridge outline so scan-edge ridges fade near the bone. 0 restores the
+              straight bridge.
+            </p>
+          </div>
+          <div class="row">
+            <label id="thickness-label" for="thickness">Minimum skin gap</label>
+            <div class="number-wrap">
+              <input
+                id="thickness"
+                type="number"
+                min="0.01"
+                max="100"
+                step="0.1"
+                value="2.0"
+              /><span>mm</span>
+            </div>
+          </div>
+          <input
+            id="thickness-range"
+            type="range"
+            aria-label="Target thickness slider"
+            min="0.1"
+            max="8"
+            step="0.1"
+            value="2"
+          />
+          <p id="thickness-help" class="helper tiny">
+            Gap is measured along the arrow. Curvature also contributes to total depth.
+          </p>
+          <div id="arrow-options">
+            <div class="xyz">
+              <label>X <input id="dx" type="number" step="0.1" value="0" /></label
+              ><label>Y <input id="dy" type="number" step="0.1" value="0" /></label
+              ><label>Z <input id="dz" type="number" step="0.1" value="-1" /></label>
+            </div>
+            <button id="from-view" class="text-button">
+              Grow away from this view <span>↘</span>
+            </button>
+          </div>
+          <details id="advanced">
+            <summary>Backing controls</summary>
+            <div id="smooth-row" class="row" hidden>
+              <label for="smoothing">Growth smoothing</label>
+              <div class="number-wrap">
+                <input id="smoothing" type="number" min="0" max="50" step="0.5" value="5" /><span
+                  >mm</span
+                >
+              </div>
+            </div>
+            <div id="offset-controls" hidden>
+              <label class="check"
+                ><input id="adaptive" type="checkbox" checked /><span
+                  >Taper backing in tight folds</span
+                ></label
+              >
+              <p class="helper tiny">
+                Allows thinner edges where the added shell would collide. The cortex stays fixed.
+              </p>
+              <div class="row">
+                <label for="minimum">Taper limit</label>
+                <div class="number-wrap">
+                  <input
+                    id="minimum"
+                    type="number"
+                    min="0.001"
+                    max="100"
+                    step="0.01"
+                    value="0.05"
+                  /><span>mm</span>
+                </div>
+              </div>
+            </div>
+            <div id="mirror-controls">
+              <div id="copy-smoothing-controls">
+                <div class="row">
+                  <label for="copy-smoothing">Copy smoothing</label>
+                  <div class="number-wrap">
+                    <input
+                      id="copy-smoothing"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="0"
+                    /><span>/100</span>
+                  </div>
+                </div>
+                <p class="helper tiny">
+                  0 keeps the reflected copy exact. Higher values soften only the generated skin.
+                </p>
+              </div>
+              <div class="row">
+                <label for="edge-rounding">Original edge allowance</label>
+                <div class="number-wrap">
+                  <input
+                    id="edge-rounding"
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value="0.4"
+                  /><span>mm</span>
+                </div>
+              </div>
+              <p class="helper tiny">
+                Allows repair at the cut edge, including replacing tiny edge triangles. Set 0 to
+                keep every original triangle exact. The core cortex stays fixed.
+              </p>
+            </div>
+            <label class="check"
+              ><input id="specks" type="checkbox" checked /><span
+                >Exclude detached scan specks</span
+              ></label
+            >
+            <p id="speck-note" class="helper tiny">
+              Only detached face fans below 0.01 mm². Any exclusion is recorded.
+            </p>
+          </details>
+          <button id="generate" class="primary" disabled>
+            <span>Build & check backing</span><span>→</span>
+          </button>
+          <p id="build-note" class="helper tiny">Choose the cortical side to begin.</p>
+        </section>
+        <section class="export-section">
+          <div class="section-label"><span class="step">04</span> EXPORT</div>
+          <div class="row">
+            <select id="export-format" aria-label="Export format">
+              <option value="bundle">Project bundle · STL + PLY + report</option>
+              <option value="stl">STL · millimetres</option>
+              <option value="ply">PLY · millimetres</option>
+            </select>
+          </div>
+          <button id="export" class="secondary" disabled>
+            Download checked result <span>↓</span>
+          </button>
+          <p class="helper tiny">
+            Open the result in your slicer to check printable detail, supports and orientation.
+          </p>
+        </section>
+      </aside>
+      <div class="workbench">
+        <div class="viewer-heading">
+          <div>
+            <span class="eyebrow">SURFACE → SOLID</span>
+            <h1>Your surface. A new backing.</h1>
+          </div>
+          <button
+            id="fit"
+            class="icon-button"
+            title="Fit fragment to view"
+            aria-label="Fit fragment to view"
+          >
+            ⛶
+          </button>
+        </div>
+        <div id="viewer">
+          <div id="empty">
+            <div class="empty-orbit">◈</div>
+            <h2>A printable volume starts here</h2>
+            <p>
+              Open a fragment to inspect its surface<br />and build a backing behind the cortex.
+            </p>
+            <button id="empty-example" class="secondary">Try your example fragment</button>
+          </div>
+          <div id="pick-banner" hidden>
+            Click the cortical side you want to keep
+            <button id="cancel-pick" aria-label="Cancel side selection">×</button>
+          </div>
+          <div id="busy" hidden>
+            <span class="spinner"></span><strong id="busy-title">Checking geometry…</strong
+            ><span id="busy-detail">Checking both skins and their joined border.</span>
+          </div>
+          <div class="viewer-tools" id="viewer-tools" hidden>
+            <label><input id="show-backing" type="checkbox" checked /> Added backing</label
+            ><label><input id="show-edges" type="checkbox" /> Triangle edges</label
+            ><label>Cutaway <input id="cutaway" type="range" min="0" max="100" value="0" /></label>
+          </div>
+          <div class="legend" id="legend" hidden>
+            <span><i class="bone"></i> Original cortex</span
+            ><span><i class="backing"></i> Added material</span
+            ><span id="collision-legend" hidden><i class="collision"></i> Intersections</span>
+          </div>
+          <div id="scale" class="scale" hidden>
+            <span id="scale-bar"></span><span id="scale-label">5 mm</span>
+          </div>
+          <div id="view-help" class="view-help">
+            Drag to rotate · Wheel to zoom · Right-drag to pan
+          </div>
+        </div>
+        <div class="result-panel">
+          <div id="status" class="status">
+            <i></i>
+            <div>
+              <strong id="status-title">Ready for a fragment</strong>
+              <p id="status-detail">
+                The original cortical surface and synthetic backing are displayed separately.
+              </p>
+            </div>
+          </div>
+          <div id="metrics" class="metrics" hidden>
+            <div><span>Cortical edits</span><strong id="movement">None</strong></div>
+            <div><span>Geometry</span><strong id="geometry-status">—</strong></div>
+            <div><span>Backing</span><strong id="growth-range">—</strong></div>
+            <div><span>Volume</span><strong id="volume">—</strong></div>
+          </div>
+        </div>
+        <div class="footer">
+          <span>Measured bone in ivory. Synthetic material in teal.</span
+          ><span>Files are processed locally.</span>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>
