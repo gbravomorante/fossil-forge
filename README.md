@@ -1,6 +1,6 @@
 # Fossil Forge
 
-**Turn a thin, open fossil scan into a printable solid without touching the measured surface.**
+**Turn a thin, open fossil scan into a printable solid while preserving the measured surface.**
 
 [![tests](https://github.com/gbravomorante/fossil-forge/actions/workflows/tests.yml/badge.svg)](https://github.com/gbravomorante/fossil-forge/actions/workflows/tests.yml)
 ![python](https://img.shields.io/badge/python-3.12%2B-3776ab)
@@ -8,8 +8,9 @@
 
 Surface scans of cortical bone fragments are open sheets: they have no thickness and cannot be
 3D printed. Fossil Forge adds a synthetic backing behind the sheet, checks the resulting shell,
-and exports it only once every check passes. The original cortex (every vertex and every
-triangle of the scan) stays exactly as measured.
+and exports it only once every check passes. The core of the original cortex stays exactly as
+measured; at most a narrow, user-limited band of tiny cut-edge triangles can be repaired, and
+every such change is recorded in the report.
 
 ![The Fossil Forge workbench](docs/img/workbench.png)
 
