@@ -18,6 +18,11 @@ cortex in ivory, added material in teal.</sub>
 
 ## How it works
 
+![Loading the example, choosing the cortical side, building and inspecting the backing](docs/img/demo.gif)
+
+<sub>Load, pick the cortical side, build and inspect with the cutaway. The roughly two-minute build is cut from the recording.</sub>
+
+
 1. **Load** a PLY, STL or OBJ surface and confirm its units.
 2. **Choose the cortical side** with one click on the surface. An arrow shows where material
    will be added.
@@ -105,6 +110,12 @@ web/                      three.js viewer and controls
 examples/                 the example fragment and scripts that reproduce its results
 tests/                    unit, API and browser tests
 ```
+
+## Feedback and contributions
+
+Bug reports and questions are welcome as [GitHub issues](https://github.com/gbravomorante/fossil-forge/issues).
+For a pull request, please open an issue first for anything beyond a small fix, and make sure
+`pytest && ruff check .` passes.
 
 ## License
 
